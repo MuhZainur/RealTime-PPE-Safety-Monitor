@@ -1,0 +1,68 @@
+{
+  "facility_survey": "Industrial Construction & Heavy Machinery Site",
+  "monitoring_duration_sec": 139.4,
+  "total_frames": 1394,
+  "video_fps": 26.4,
+  "overall_ppe_compliance_pct": 24.8,
+  "total_incidents_escalated": 8,
+  "unique_zone_intruders_count": 10,
+  "temporal_hysteresis_frames": 15,
+  "incident_log_records": [
+    {
+      "incident_id": "INC-001",
+      "timestamp_sec": 8.0,
+      "worker_id": 3,
+      "violation": "Missing Safety Helmet & Missing High-Vis Vest",
+      "action_taken": "Automated Audio Strobe Alarm Dispatched"
+    },
+    {
+      "incident_id": "INC-002",
+      "timestamp_sec": 24.5,
+      "worker_id": 11,
+      "violation": "Restricted Red-Zone Intrusion & Missing Safety Helmet & Missing High-Vis Vest",
+      "action_taken": "Automated Audio Strobe Alarm Dispatched"
+    },
+    {
+      "incident_id": "INC-003",
+      "timestamp_sec": 52.5,
+      "worker_id": 25,
+      "violation": "Missing Safety Helmet & Missing High-Vis Vest",
+      "action_taken": "Automated Audio Strobe Alarm Dispatched"
+    },
+    {
+      "incident_id": "INC-004",
+      "timestamp_sec": 76.3,
+      "worker_id": 31,
+      "violation": "Missing Safety Helmet & Missing High-Vis Vest",
+      "action_taken": "Automated Audio Strobe Alarm Dispatched"
+    },
+    {
+      "incident_id": "INC-005",
+      "timestamp_sec": 94.1,
+      "worker_id": 34,
+      "violation": "Missing Safety Helmet & Missing High-Vis Vest",
+      "action_taken": "Automated Audio Strobe Alarm Dispatched"
+    },
+    {
+      "incident_id": "INC-006",
+      "timestamp_sec": 97.0,
+      "worker_id": 35,
+      "violation": "Restricted Red-Zone Intrusion & Missing Safety Helmet & Missing High-Vis Vest",
+      "action_taken": "Automated Audio Strobe Alarm Dispatched"
+    },
+    {
+      "incident_id": "INC-007",
+      "timestamp_sec": 97.1,
+      "worker_id": 38,
+      "violation": "Restricted Red-Zone Intrusion & Missing Safety Helmet & Missing High-Vis Vest",
+      "action_taken": "Automated Audio Strobe Alarm Dispatched"
+    },
+    {
+      "incident_id": "INC-008",
+      "timestamp_sec": 125.2,
+      "worker_id": 46,
+      "violation": "Missing Safety Helmet & Missing High-Vis Vest",
+      "action_taken": "Automated Audio Strobe Alarm Dispatched"
+    }
+  ]
+}

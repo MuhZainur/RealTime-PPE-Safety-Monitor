@@ -1,0 +1,43 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Credentials & environment secrets
+.env
+.env.*
+!.env.example
+secrets.toml
+credentials.json
+*.pem
+*.key
+*.pfx
+*.p12
+
+# OS & Editor metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files & runtime logs
+*.tmp
+*.temp
+runs/
