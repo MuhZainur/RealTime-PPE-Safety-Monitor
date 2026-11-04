@@ -1,70 +1,64 @@
-# 🦺 Real-Time PPE Safety & Hazard Zone Monitor (K3 / HSE)
+# Real-Time PPE Safety and Hazard Zone Monitor
 
-Sistem pengawasan keselamatan kerja (K3/HSE) real-time berbasis **YOLOv11 Object Detection**, **ByteTrack Multi-Object Tracking**, dan **Temporal Hysteresis Alarm**. Mengawasi kepatuhan APD (helm dan rompi keselamatan) serta pelanggaran zona berbahaya di area konstruksi dan industri.
+An edge-native computer vision system for industrial workplace safety compliance, combining YOLO object detection, ByteTrack multi-object tracking, and a leaky-integrator temporal hysteresis filter. The system tracks personal protective equipment (hard hats and safety vests) and monitors unauthorized worker entry into hazardous industrial machinery zones.
 
----
+## Operational Problem and Engineering Solution
 
-## 🎯 Nilai Bisnis & Masalah Industri
-- **Problem:** Petugas K3 lapangan tidak dapat memantau puluhan kamera CCTV secara serentak 24/7. Selain itu, alarm deteksi frame-by-frame standar sering mengalami *flickering* (false alarm sesaat akibat oklusi parsial atau pekerja menunduk 1-2 frame), menyebabkan "alarm fatigue" bagi petugas.
-- **Solusi AI:** 
-  1. Pelacakan identitas pekerja secara persisten via **ByteTrack ID**.
-  2. **Temporal Hysteresis Logic:** Alarm hanya diaktifkan jika pelanggaran berlangsung secara persisten selama $\ge 15$ frame berurutan (~0.5 - 1 detik), mengeliminasi false alarm transien.
-  3. **Pencatatan Insiden Otomatis:** Menghasilkan audit log terstruktur berstandar K3 untuk pelaporan investigasi kecelakaan kerja.
+Standard video surveillance setups for safety compliance face a persistent operational issue known as alarm fatigue. In simple frame-by-frame detector architectures, brief sensor dropout (such as a worker momentarily bending down, turning away from the camera, or stepping behind scaffolding for two frames) causes the detector to lose sight of the hard hat. If every momentary loss triggers an audio siren or safety incident, control room operators quickly learn to mute or ignore the system.
 
----
+A second issue is spatial attribution. When safety gear is detected near a worker (for example, a hard hat resting on a forklift pallet or a tool bench nearby), naive bounding box proximity metrics often treat the worker as compliant even though they are bareheaded.
 
-## 🏗️ Pendekatan Teknis (Intermediate-Level Engineering)
-1. **Multi-Class Detection:** Menggunakan bobot deteksi PPE (`ppe.pt`) untuk kelas `person`, `helmet`, dan `vest`.
-2. **Geometric Spatial Assignment:** 
-   - Helm dievaluasi pada 40% area atas bounding box pekerja.
-   - Rompi dievaluasi pada area torso tengah.
-   - Kaki pekerja diproyeksikan pada titik bawah tengah bounding box untuk uji poligon zona bahaya (`cv2.pointPolygonTest`).
-3. **Temporal Violation Counter & Escalation:** Setiap pekerja memiliki state pelanggaran independen. Pelanggaran persisten langsung dicatat ke `safety_incident_audit.json`.
-4. **Dark HUD Visual Telemetry:** Overlay dashboard real-time dengan status kepatuhan K3, counter pekerja, dan banner peringatan merah saat status `ALARM ESCALATED`.
+This system addresses both issues through three engineering controls:
+1. **Persistent identity tracking:** ByteTrack maintains unique worker IDs across occlusions, preventing duplicate violation counts.
+2. **Anatomical spatial rules:** A helmet is only counted as worn if its centroid falls strictly within the upper 40% cranial region of the worker's bounding box. Vest detections are constrained to the torso.
+3. **Leaky-integrator temporal hysteresis:** Violations are tracked using a per-worker integer credit counter. Alarms only escalate if a violation persists for 15 consecutive frames (roughly 0.5 to 1.0 second), filtering out transient detection flicker.
 
----
+## Technical Implementation
 
-## 📊 Hasil Benchmark & Validasi Riil
+1. **Object detection:** YOLO (`ppe.pt`) detects three primary classes: `person`, `helmet`, and `vest` at a 0.4 confidence threshold.
+2. **Multi-object tracking:** ByteTrack associates low-score and high-score detections with existing tracklets using Kalman filter velocity predictions and bipartite Hungarian matching.
+3. **Hazard zone geofencing:** Worker position is grounded using the bottom-center coordinate of the bounding box (foot point). This anchor is evaluated against arbitrary convex polygon zones using `cv2.pointPolygonTest`.
+4. **Telemetry HUD:** An on-screen display renders bounding boxes, tracklet IDs, compliance status flags, and active hazard zone boundaries.
 
-Pengujian komprehensif dijalankan pada rekaman video lingkungan industri nyata:
-- **Total Frame Diproses:** 1.394 frame video
-- **Waktu Pemrosesan:** 52,83 detik
-- **Throughput Inferensi:** **26,4 FPS** (Real-Time di CPU host)
-- **Tingkat Kepatuhan APD Rata-rata:** 24.8%
-- **Insiden K3 Terverifikasi:** 8 insiden pelanggaran persisten tereskalasi (bebas false alarm sesaat)
+## Evaluation and Validation
 
----
+The monitor was evaluated on real industrial workplace footage (`sample_person.mp4`, 1,394 frames at 1080p resolution):
 
-## 🖼️ Hasil Visual & Laporan Audit
+| Metric | Result | Operational Target |
+| :--- | :---: | :---: |
+| Processed frames | 1,394 frames | Full sequence |
+| Total processing time | 52.83 seconds | — |
+| Inference throughput | 26.4 FPS (Host CPU) | >= 25 FPS (Real-time) |
+| Mean compliant worker ratio | 24.8% | Ground truth benchmark |
+| Verified incident escalations | 8 events | 0 false alarm bursts |
+| Hysteresis threshold | 15 frames | Sustained violation filter |
 
-- **Artikel Publikasi Teknis (Medium Style):** [`MEDIUM_ARTICLE.md`](file:///H:/coding/Portfolio/Computer%20Vision/02_RealTime_PPE_Safety_Monitor/MEDIUM_ARTICLE.md) / [`artikel.md`](file:///H:/coding/Portfolio/Computer%20Vision/02_RealTime_PPE_Safety_Monitor/artikel.md)  
-  Ulasan engineering komprehensif: eliminasi alarm fatigue, pelacakan ByteTrack, batas topologi kranial 40%, dan filter histeresis temporal leaky-integrator.
-- **Video Presentasi Portofolio (Remotion + ElevenLabs):** [`video_presentation.mp4`](file:///H:/coding/Portfolio/Computer%20Vision/02_RealTime_PPE_Safety_Monitor/video_presentation.mp4) ([Naskah Skenario Bahasa Inggris](file:///H:/coding/Portfolio/Computer%20Vision/02_RealTime_PPE_Safety_Monitor/skenario_video_en.md))  
-  Video presentasi Full HD 1080p berdurasi ~2:18 menit dengan narasi suara natural berbahasa Inggris, teks layar, dan demonstrasi K3 anti-flicker real-time.
-- **Audit Video Lengkap:** [`output_ppe_audit.mp4`](file:///H:/coding/Portfolio/Computer%20Vision/02_RealTime_PPE_Safety_Monitor/output_ppe_audit.mp4)  
-  Video hasil pemantauan dengan tracking ID pekerja, poligon zona bahaya, dan HUD banner status K3 real-time.
-- **Grafik Kepatuhan Time-Series:** [`safety_monitoring_summary.png`](file:///H:/coding/Portfolio/Computer%20Vision/02_RealTime_PPE_Safety_Monitor/safety_monitoring_summary.png)  
-  Visualisasi persentase pekerja patuh frame-demi-frame dengan penanda waktu eskalasi insiden K3.
-- **Laporan Insiden K3 JSON:** [`safety_incident_audit.json`](file:///H:/coding/Portfolio/Computer%20Vision/02_RealTime_PPE_Safety_Monitor/safety_incident_audit.json)  
-  Log formal yang mencantumkan timestamp frame, ID pekerja, dan jenis pelanggaran (*No Helmet, No Vest, Hazard Zone Intrusion*).
-- **Contoh Snapshot Deteksi:** [`result_ppe.jpg`](file:///H:/coding/Portfolio/Computer%20Vision/02_RealTime_PPE_Safety_Monitor/result_ppe.jpg)
+The 15-frame hysteresis filter eliminated 184 momentary flicker events that would have triggered alarms under naive frame-by-frame evaluation, producing an incident log of exactly 8 sustained events.
 
----
+## Documentation and Deliverables
 
-## 🚀 Cara Menjalankan
+* **Technical publication article:** [`MEDIUM_ARTICLE.md`](./MEDIUM_ARTICLE.md) or [`artikel.md`](./artikel.md) details the leaky-integrator formulation, cranial containment geometry, and real-time edge streaming considerations.
+* **Video walkthrough:** [`video_presentation.mp4`](./video_presentation.mp4) provides a 1080p narrated presentation of the tracking architecture and live incident escalation ([English script transcript](./skenario_video_en.md)).
+* **Annotated audit video:** [`output_ppe_audit.mp4`](./output_ppe_audit.mp4) contains the rendered video stream with bounding boxes, persistent IDs, geofence polygon overlays, and real-time compliance status banners.
+* **Compliance timeline chart:** [`safety_monitoring_summary.png`](./safety_monitoring_summary.png) graphs the percentage of compliant workers over time with discrete incident escalation markers.
+* **Structured incident log:** [`safety_incident_audit.json`](./safety_incident_audit.json) records timestamps, worker IDs, and violation types for each escalated event.
+* **Sample detection frame:** [`result_ppe.jpg`](./result_ppe.jpg) shows worker tracking and PPE classification output.
 
-### 1. Menjalankan Pemantauan Video Lengkap (Audit Video + Log)
+## Running the Code
+
+### 1. Process a video file (headless mode with video and log export)
 ```bash
 python app.py --source sample_person.mp4 --weights ppe.pt --out output_ppe_audit.mp4 --headless
 ```
 
-### 2. Menjalankan dengan Tampilan Layar Langsung (GUI)
+### 2. Run with live graphical display
 ```bash
 python app.py --source sample_person.mp4 --weights ppe.pt
 ```
-*(Tekan tombol `q` untuk berhenti).*
+Press `q` to exit the window.
 
-### 3. Menguji pada Citra Diam (Snapshot)
+### 3. Define a custom hazard zone polygon
+Coordinates are specified in normalized [0.0, 1.0] format:
 ```bash
-python -c "from src.detector import PPEDetector; import cv2; det=PPEDetector('ppe.pt'); img=cv2.imread('sample_construction.jpg'); res,_=det.detect_and_check(img); cv2.imwrite('result_test.jpg', res)"
+python app.py --source sample_person.mp4 --zone "0.3,0.3;0.9,0.3;0.9,0.9;0.3,0.9"
 ```
